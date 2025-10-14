@@ -7,10 +7,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Если уже авторизованы — сразу на doctor.html
-(async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) window.location.href = "./doctor.html";
-})();
+
 
 // Хэндлер логина
 const $ = (id) => document.getElementById(id);
@@ -32,7 +29,7 @@ btn?.addEventListener("click", async () => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     // Успех → редирект
-    //window.location.href = "./doctor.html";
+    window.location.href = "./doctor.html";
   } catch (e) {
     errBox.textContent = e.message || "Ошибка входа";
     errBox.style.display = "block";
