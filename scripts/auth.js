@@ -26,16 +26,13 @@ btn?.addEventListener("click", async () => {
   const email = emailEl.value.trim();
   const password = passEl.value;
 
-if (window.location.pathname.endsWith("index.html") || window.location.pathname === "/") {
-  await supabase.auth.signOut(); // ⬅ Это очищает localStorage с JWT
-}
 
   try {
     // Вход по email+password
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     // Успех → редирект
-    window.location.href = "./doctor.html";
+    //window.location.href = "./doctor.html";
   } catch (e) {
     errBox.textContent = e.message || "Ошибка входа";
     errBox.style.display = "block";
