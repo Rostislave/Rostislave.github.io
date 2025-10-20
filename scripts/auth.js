@@ -1,13 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Подставь свои реальные данные:
 const SUPABASE_URL = "https://vyajxftrbgozpqrvclwd.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5YWp4ZnRyYmdvenBxcnZjbHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzMzE1NjUsImV4cCI6MjA3NTkwNzU2NX0.zbo359O-XVFKQ1u-lx9HWH-pvcPL2QZm1h7v8dnEogM"; // ⚠ НЕ service_role, только anon_key!
 
+const tokenKey = "sb-" + SUPABASE_URL.replace("https://", "") + "-auth-token";
+localStorage.removeItem(tokenKey);
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Если уже авторизованы — сразу на doctor.html
-
+supabase.auth.signOut(); // На всякий случай, чтобы не было залогинено
 
 // Хэндлер логина
 const $ = (id) => document.getElementById(id);
