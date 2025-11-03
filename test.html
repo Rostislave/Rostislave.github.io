@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <title>=:5B0 ?0F85=B0</title>
+  <title>Анкета пациента</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * { box-sizing: border-box; }
@@ -146,78 +146,78 @@
   <div class="container">
     <div id="loading" class="loading">
       <div class="spinner"></div>
-      <p>03@C7:0...</p>
+      <p>Загрузка...</p>
     </div>
 
     <div id="formContainer" style="display: none;">
-      <h1>548F8=A:0O 0=:5B0</h1>
-      <p class="subtitle">>60;C9AB0, 70?>;=8B5 2A5 ?>;O 0=:5BK. 0H8 40==K5 1C4CB ?5@540=K 2@0GC.</p>
+      <h1>Медицинская анкета</h1>
+      <p class="subtitle">Пожалуйста, заполните все поля анкеты. Ваши данные будут переданы врачу.</p>
 
       <div id="errorMsg" class="error"></div>
-      <div id="successMsg" class="success">!?0A81>! 0H8 >B25BK >B?@02;5=K 2@0GC.</div>
+      <div id="successMsg" class="success">Спасибо! Ваши ответы отправлены врачу.</div>
 
       <form id="patientForm">
         <div class="form-group">
-          <label>0H5 8<O <span class="required">*</span></label>
-          <input type="text" id="patientName" required placeholder="20= 20=>2" />
+          <label>Ваше имя <span class="required">*</span></label>
+          <input type="text" id="patientName" required placeholder="Иван Иванов" />
         </div>
 
         <div class="form-group">
-          <label>>; <span class="required">*</span></label>
+          <label>Пол <span class="required">*</span></label>
           <div class="radio-group">
             <div class="radio-option">
               <input type="radio" id="genderMale" name="gender" value="male" required />
-              <label for="genderMale" style="margin: 0;">C6A:>9</label>
+              <label for="genderMale" style="margin: 0;">Мужской</label>
             </div>
             <div class="radio-option">
               <input type="radio" id="genderFemale" name="gender" value="female" required />
-              <label for="genderFemale" style="margin: 0;">5=A:89</label>
+              <label for="genderFemale" style="margin: 0;">Женский</label>
             </div>
           </div>
         </div>
 
         <div class="form-group">
-          <label>>7@0AB <span class="required">*</span></label>
+          <label>Возраст <span class="required">*</span></label>
           <input type="number" id="age" required placeholder="25" min="1" max="120" />
         </div>
 
         <div class="form-group">
-          <label>0B0 @>645=8O</label>
+          <label>Дата рождения</label>
           <input type="date" id="birthDate" />
         </div>
 
         <div class="form-group">
-          <label>A=>2=0O 60;>10 <span class="required">*</span></label>
-          <textarea id="mainComplaint" required placeholder="?8H8B5, GB> 20A 15A?>:>8B..."></textarea>
+          <label>Основная жалоба <span class="required">*</span></label>
+          <textarea id="mainComplaint" required placeholder="Опишите, что вас беспокоит..."></textarea>
         </div>
 
         <div class="form-group">
-          <label>%@>=8G5A:85 701>;520=8O</label>
-          <textarea id="chronicDiseases" placeholder="#:068B5, 5A;8 5ABL"></textarea>
+          <label>Хронические заболевания</label>
+          <textarea id="chronicDiseases" placeholder="Укажите, если есть"></textarea>
         </div>
 
         <div class="form-group">
-          <label>@8=8<05<K5 ;5:0@AB20</label>
-          <textarea id="medications" placeholder="#:068B5 =0720=8O 8 4>78@>2:8"></textarea>
+          <label>Принимаемые лекарства</label>
+          <textarea id="medications" placeholder="Укажите названия и дозировки"></textarea>
         </div>
 
         <div class="form-group">
-          <label>;;5@388</label>
-          <textarea id="allergies" placeholder="#:068B5, 5A;8 5ABL"></textarea>
+          <label>Аллергии</label>
+          <textarea id="allergies" placeholder="Укажите, если есть"></textarea>
         </div>
 
         <div class="form-group">
-          <label>>?>;=8B5;L=0O 8=D>@<0F8O</label>
-          <textarea id="additionalInfo" placeholder="N10O 4@C30O 206=0O 8=D>@<0F8O"></textarea>
+          <label>Дополнительная информация</label>
+          <textarea id="additionalInfo" placeholder="Любая другая важная информация"></textarea>
         </div>
 
-        <button type="submit" id="submitBtn">B?@028BL 0=:5BC</button>
+        <button type="submit" id="submitBtn">Отправить анкету</button>
       </form>
     </div>
 
     <div id="invalidLink" style="display: none; text-align: center;">
-      <h1>H81:0</h1>
-      <p>525@=0O 8;8 CAB0@52H0O AAK;:0. >60;C9AB0, >1@0B8B5AL : 2@0GC 70 =>2>9 AAK;:>9.</p>
+      <h1>Ошибка</h1>
+      <p>Неверная или устаревшая ссылка. Пожалуйста, обратитесь к врачу за новой ссылкой.</p>
     </div>
   </div>
 

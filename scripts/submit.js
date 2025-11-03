@@ -3,10 +3,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = "https://vyajxftrbgozpqrvclwd.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5YWp4ZnRyYmdvenBxcnZjbHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzMzE1NjUsImV4cCI6MjA3NTkwNzU2NX0.zbo359O-XVFKQ1u-lx9HWH-pvcPL2QZm1h7v8dnEogM";
 
-// !>7405< :;85=B Supabase (0=>=8<=K9 4>ABC?)
+// Создаем клиент Supabase (анонимный доступ)
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// DOM M;5<5=BK
+// DOM Элементы
 const $ = (id) => document.getElementById(id);
 const loadingEl = $("loading");
 const formContainer = $("formContainer");
@@ -16,24 +16,24 @@ const successMsg = $("successMsg");
 const patientForm = $("patientForm");
 const submitBtn = $("submitBtn");
 
-// >;CG05< link_code 87 URL
+// Получаем link_code из URL
 const urlParams = new URLSearchParams(window.location.search);
 const linkCode = urlParams.get("code");
 
-// @>25@O5< =0;8G85 link_code
+// Проверяем наличие link_code
 if (!linkCode) {
   loadingEl.style.display = "none";
   invalidLink.style.display = "block";
 } else {
-  // @>25@O5< 20;84=>ABL AAK;:8
+  // Проверяем валидность ссылки
   checkLinkValidity();
 }
 
-// @>25@:0 20;84=>AB8 AAK;:8
+// Проверка валидности ссылки
 async function checkLinkValidity() {
   try {
-    // KB05<AO ?>;CG8BL A5AA8N ?> link_code
-    // RLS ?>;8B8:0 allow_select_by_link_code_param ?>72>;8B MB> A45;0BL
+    // Пытаемся получить сессию по link_code
+    // RLS политика allow_select_by_link_code_param позволит это сделать
     const { data, error } = await supabase
       .from("sessions")
       .select("id, status, patient_name")
@@ -47,18 +47,31 @@ async function checkLinkValidity() {
       return;
     }
 
-    // @>25@O5< AB0BCA A5AA88
-    if (data.status === "completed") {
-      errorMsg.textContent = "-B0 0=:5B0 C65 1K;0 70?>;=5=0.";
-      errorMsg.classList.add("show");
+    // Проверяем статус сессии - пускаем только если pending
+    if (data.status !== "pending") {
+      loadingEl.style.display = "none";
+      invalidLink.style.display = "block";
+
+      // Показываем сообщение в зависимости от статуса
+      const invalidTitle = invalidLink.querySelector("h1");
+      const invalidText = invalidLink.querySelector("p");
+
+      if (data.status === "completed") {
+        if (invalidTitle) invalidTitle.textContent = "Анкета уже заполнена";
+        if (invalidText) invalidText.textContent = "Эта анкета уже была заполнена. Если нужно заполнить еще раз, обратитесь к врачу за новой ссылкой.";
+      } else if (data.status === "reviewed") {
+        if (invalidTitle) invalidTitle.textContent = "Анкета уже проверена";
+        if (invalidText) invalidText.textContent = "Эта анкета уже проверена врачом. Доступ к изменению неверен.";
+      }
+      return;
     }
 
-    // A;8 5ABL 8<O ?0F85=B0 - ?@5470?>;=O5<
+    // Если есть имя пациента - предзаполняем
     if (data.patient_name) {
       $("patientName").value = data.patient_name;
     }
 
-    // >:07K205< D>@<C
+    // Показываем форму - только для pending статуса
     loadingEl.style.display = "none";
     formContainer.style.display = "block";
   } catch (error) {
@@ -68,20 +81,20 @@ async function checkLinkValidity() {
   }
 }
 
-// 1@01>BG8: >B?@02:8 D>@<K
+// Обработчик отправки формы
 patientForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // !:@K205< A>>1I5=8O
+  // Скрываем сообщения
   errorMsg.classList.remove("show");
   successMsg.classList.remove("show");
 
-  // ;>:8@C5< :=>?:C
+  // Блокируем кнопку
   submitBtn.disabled = true;
-  submitBtn.textContent = "B?@02:0...";
+  submitBtn.textContent = "Отправка...";
 
   try {
-    // !>18@05< 40==K5 D>@<K
+    // Собираем данные формы
     const formData = {
       patient_name: $("patientName").value.trim(),
       gender: document.querySelector('input[name="gender"]:checked')?.value,
@@ -94,13 +107,13 @@ patientForm.addEventListener("submit", async (e) => {
       additional_info: $("additionalInfo").value.trim() || null
     };
 
-    // 0;840F8O >1O70B5;L=KE ?>;59
+    // Валидация обязательных полей
     if (!formData.patient_name || !formData.gender || !formData.age || !formData.main_complaint) {
-      throw new Error(">60;C9AB0, 70?>;=8B5 2A5 >1O70B5;L=K5 ?>;O.");
+      throw new Error("Пожалуйста, заполните все обязательные поля.");
     }
 
-    // B?@02;O5< 40==K5 2 Supabase
-    // RLS ?>;8B8:0 allow_update_by_link_code_param ?>72>;8B >1=>28BL 70?8AL
+    // Отправляем данные в Supabase
+    // RLS политика allow_update_by_link_code_param позволит обновить запись
     const { data, error } = await supabase
       .from("sessions")
       .update({
@@ -114,24 +127,24 @@ patientForm.addEventListener("submit", async (e) => {
 
     if (error) {
       console.error("Error saving data:", error);
-      throw new Error("H81:0 ?@8 A>E@0=5=88 40==KE. >60;C9AB0, ?>?@>1C9B5 A=>20.");
+      throw new Error("Ошибка при сохранении данных. Пожалуйста, попробуйте снова.");
     }
 
-    // #A?5E!
+    // Успех!
     successMsg.classList.add("show");
     patientForm.style.display = "none";
 
-    // >6=> ?5@5=0?@028BL 8;8 ?>:070BL A>>1I5=85
+    // Можно перенаправить или показать сообщение
     setTimeout(() => {
       // window.location.href = "./thank-you.html";
     }, 2000);
 
   } catch (error) {
-    errorMsg.textContent = error.message || "@>87>H;0 >H81:0 ?@8 >B?@02:5 D>@<K.";
+    errorMsg.textContent = error.message || "Произошла ошибка при отправке формы.";
     errorMsg.classList.add("show");
     console.error("Submit error:", error);
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = "B?@028BL 0=:5BC";
+    submitBtn.textContent = "Отправить анкету";
   }
 });
