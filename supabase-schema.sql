@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS public.sessions CASCADE;
 
 -- Создаем новую таблицу sessions с полной структурой
 CREATE TABLE IF NOT EXISTS public.sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   link_code VARCHAR(12) UNIQUE NOT NULL,
   patient_name TEXT,
   answers_json JSONB,
