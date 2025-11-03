@@ -85,11 +85,13 @@ function renderSessions() {
   sessionsListEl.innerHTML = sessions.map(session => `
     <div class="session-item">
       <div class="session-item-header">
-        <div class="session-item-id">${session.session_id || session.id}</div>
+        <div class="session-item-id">${session.link_code}</div>
         <div class="session-item-date">${formatDate(session.created_at)}</div>
       </div>
-      <div class="session-item-patient">${session.patient_name || "Без имени"}</div>
+      <div class="session-item-patient">${session.patient_name || "Не заполнено"}</div>
+      <div class="session-item-status">Статус: ${session.status === 'pending' ? 'Ожидает' : session.status === 'completed' ? 'Заполнено' : 'Проверено'}</div>
       ${session.notes ? `<div class="session-item-notes">${session.notes}</div>` : ""}
+      ${session.answers_json ? `<div class="session-item-answers">✓ Есть ответы</div>` : ""}
     </div>
   `).join("");
 }
@@ -129,17 +131,18 @@ function formatDate(dateString) {
 // Create session
 async function createSession(patientName, notes) {
   try {
-    // Generate unique session ID using nanoid
-    const sessionId = nanoid(10); // Generate 10-character ID
+    // Generate unique link code using nanoid (12 characters)
+    const linkCode = nanoid(12);
 
     // Try to save to Supabase
     const { data, error } = await supabase
       .from("sessions")
       .insert([
         {
-          session_id: sessionId,
-          patient_name: patientName,
+          link_code: linkCode,
+          patient_name: patientName || null,
           notes: notes || null,
+          status: 'pending',
           doctor_id: currentUser.id,
           doctor_email: currentUser.email,
           created_at: new Date().toISOString()
@@ -161,7 +164,7 @@ async function createSession(patientName, notes) {
     }
 
     return {
-      sessionId,
+      linkCode,
       patientName,
       notes,
       createdAt: new Date().toISOString()
@@ -191,8 +194,8 @@ sessionForm.addEventListener("submit", async (e) => {
   try {
     const session = await createSession(patientName, notes);
 
-    // Show session ID
-    sessionIdValue.textContent = session.sessionId;
+    // Show link code
+    sessionIdValue.textContent = session.linkCode;
     sessionIdDisplay.classList.add("show");
     showSuccess();
 
@@ -222,11 +225,14 @@ function resetForm() {
   hideMessages();
 }
 
-// Copy session ID
+// Copy session link
 copySessionBtn.addEventListener("click", async () => {
-  const sessionId = sessionIdValue.textContent;
+  const linkCode = sessionIdValue.textContent;
+  // Создаем полную ссылку для пациента
+  const patientLink = `${window.location.origin}/test.html?code=${linkCode}`;
+
   try {
-    await navigator.clipboard.writeText(sessionId);
+    await navigator.clipboard.writeText(patientLink);
     const originalText = copySessionBtn.textContent;
     copySessionBtn.textContent = "Скопировано!";
     setTimeout(() => {
@@ -236,7 +242,7 @@ copySessionBtn.addEventListener("click", async () => {
     console.error("Error copying:", error);
     // Fallback for older browsers
     const textArea = document.createElement("textarea");
-    textArea.value = sessionId;
+    textArea.value = patientLink;
     document.body.appendChild(textArea);
     textArea.select();
     document.execCommand("copy");
@@ -252,14 +258,16 @@ copySessionBtn.addEventListener("click", async () => {
 
 // Share session
 shareSessionBtn.addEventListener("click", () => {
-  const sessionId = sessionIdValue.textContent;
+  const linkCode = sessionIdValue.textContent;
   const patientName = patientNameEl.value.trim();
-  const shareText = `Сессия для ${patientName}\nID: ${sessionId}`;
+  const patientLink = `${window.location.origin}/test.html?code=${linkCode}`;
+  const shareText = `Ссылка для заполнения анкеты${patientName ? ` (${patientName})` : ''}:\n${patientLink}`;
 
   if (navigator.share) {
     navigator.share({
-      title: "ID сессии пациента",
-      text: shareText
+      title: "Ссылка для пациента",
+      text: shareText,
+      url: patientLink
     }).catch(err => console.log("Error sharing:", err));
   } else {
     // Fallback - copy to clipboard

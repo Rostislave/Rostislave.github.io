@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>=:5B0 ?0F85=B0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0 0 10px;
+      color: #667eea;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .form-group {
+      margin-bottom: 24px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+      font-size: 14px;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .radio-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .radio-option input[type="radio"] {
+      width: auto;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .error {
+      background: #fee;
+      color: #c33;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .success {
+      background: #efe;
+      color: #3a3;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .error.show,
+    .success.show {
+      display: block;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .required {
+      color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>03@C7:0...</p>
+    </div>
+
+    <div id="formContainer" style="display: none;">
+      <h1>548F8=A:0O 0=:5B0</h1>
+      <p class="subtitle">>60;C9AB0, 70?>;=8B5 2A5 ?>;O 0=:5BK. 0H8 40==K5 1C4CB ?5@540=K 2@0GC.</p>
+
+      <div id="errorMsg" class="error"></div>
+      <div id="successMsg" class="success">!?0A81>! 0H8 >B25BK >B?@02;5=K 2@0GC.</div>
+
+      <form id="patientForm">
+        <div class="form-group">
+          <label>0H5 8<O <span class="required">*</span></label>
+          <input type="text" id="patientName" required placeholder="20= 20=>2" />
+        </div>
+
+        <div class="form-group">
+          <label>>; <span class="required">*</span></label>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" id="genderMale" name="gender" value="male" required />
+              <label for="genderMale" style="margin: 0;">C6A:>9</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="genderFemale" name="gender" value="female" required />
+              <label for="genderFemale" style="margin: 0;">5=A:89</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>>7@0AB <span class="required">*</span></label>
+          <input type="number" id="age" required placeholder="25" min="1" max="120" />
+        </div>
+
+        <div class="form-group">
+          <label>0B0 @>645=8O</label>
+          <input type="date" id="birthDate" />
+        </div>
+
+        <div class="form-group">
+          <label>A=>2=0O 60;>10 <span class="required">*</span></label>
+          <textarea id="mainComplaint" required placeholder="?8H8B5, GB> 20A 15A?>:>8B..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>%@>=8G5A:85 701>;520=8O</label>
+          <textarea id="chronicDiseases" placeholder="#:068B5, 5A;8 5ABL"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>@8=8<05<K5 ;5:0@AB20</label>
+          <textarea id="medications" placeholder="#:068B5 =0720=8O 8 4>78@>2:8"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>;;5@388</label>
+          <textarea id="allergies" placeholder="#:068B5, 5A;8 5ABL"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>>?>;=8B5;L=0O 8=D>@<0F8O</label>
+          <textarea id="additionalInfo" placeholder="N10O 4@C30O 206=0O 8=D>@<0F8O"></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn">B?@028BL 0=:5BC</button>
+      </form>
+    </div>
+
+    <div id="invalidLink" style="display: none; text-align: center;">
+      <h1>H81:0</h1>
+      <p>525@=0O 8;8 CAB0@52H0O AAK;:0. >60;C9AB0, >1@0B8B5AL : 2@0GC 70 =>2>9 AAK;:>9.</p>
+    </div>
+  </div>
+
+  <script type="module" src="./scripts/submit.js"></script>
+</body>
+</html>
