@@ -149,8 +149,15 @@ async function createSession(patientName, notes) {
 
     if (error) {
       console.error("Error saving to database:", error);
-      // Even if DB save fails, return the session ID
-      // (table might not exist yet)
+
+      // Show helpful error message based on error type
+      if (error.code === '42P01') {
+        throw new Error("Таблица sessions не создана в Supabase. Пожалуйста, выполните SQL скрипт из файла supabase-schema.sql");
+      } else if (error.code === '42501') {
+        throw new Error("Нет прав доступа к таблице sessions. Проверьте RLS политики в Supabase");
+      } else {
+        throw new Error(`Ошибка базы данных: ${error.message}`);
+      }
     }
 
     return {
