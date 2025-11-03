@@ -36,7 +36,7 @@ async function checkLinkValidity() {
     // RLS политика allow_select_by_link_code_param позволит это сделать
     const { data, error } = await supabase
       .from("sessions")
-      .select("id, status, patient_name")
+      .select("session_id, status, patient_name")
       .eq("link_code", linkCode)
       .single();
 
