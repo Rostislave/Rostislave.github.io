@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <title>0=5;L 2@0G0</title>
+  <title>Панель врача</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * { box-sizing: border-box; }
@@ -208,46 +208,46 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>0=5;L 2@0G0</h1>
+      <h1>Панель врача</h1>
       <div class="user-info">
-        <span class="user-email" id="userEmail">03@C7:0...</span>
-        <button class="logout-btn" id="logoutBtn">K9B8</button>
+        <span class="user-email" id="userEmail">Загрузка...</span>
+        <button class="logout-btn" id="logoutBtn">Выйти</button>
       </div>
     </div>
 
     <div class="card">
-      <h2>!>740BL =>2CN A5AA8N</h2>
+      <h2>Создать новую сессию</h2>
       <form id="sessionForm">
         <div class="form-group">
-          <label for="patientName"><O ?0F85=B0</label>
-          <input type="text" id="patientName" placeholder="20= 20=>2" required />
+          <label for="patientName">Имя пациента</label>
+          <input type="text" id="patientName" placeholder="Иван Иванов" required />
         </div>
         <div class="form-group">
-          <label for="sessionNotes">@8<5G0=8O : A5AA88 (>?F8>=0;L=>)</label>
-          <textarea id="sessionNotes" placeholder=">?>;=8B5;L=0O 8=D>@<0F8O > A5AA88..."></textarea>
+          <label for="sessionNotes">Примечания к сессии (опционально)</label>
+          <textarea id="sessionNotes" placeholder="Дополнительная информация о сессии..."></textarea>
         </div>
         <div>
-          <button type="submit" class="btn btn-primary" id="createSessionBtn">!>740BL A5AA8N</button>
-          <button type="button" class="btn btn-secondary" id="resetFormBtn">G8AB8BL</button>
+          <button type="submit" class="btn btn-primary" id="createSessionBtn">Создать сессию</button>
+          <button type="button" class="btn btn-secondary" id="resetFormBtn">Очистить</button>
         </div>
-        <div class="success-msg" id="successMsg">!5AA8O CA?5H=> A>740=0!</div>
-        <div class="error-msg" id="errorMsg">H81:0 ?@8 A>740=88 A5AA88</div>
+        <div class="success-msg" id="successMsg">Сессия успешно создана!</div>
+        <div class="error-msg" id="errorMsg">Ошибка при создании сессии</div>
       </form>
 
       <div class="session-id-display" id="sessionIdDisplay">
-        <h3>ID =>2>9 A5AA88:</h3>
+        <h3>ID новой сессии:</h3>
         <div class="session-id-value" id="sessionIdValue"></div>
         <div class="session-actions">
-          <button class="btn btn-primary" id="copySessionBtn">!:>?8@>20BL ID</button>
-          <button class="btn btn-secondary" id="shareSessionBtn">>45;8BLAO</button>
+          <button class="btn btn-primary" id="copySessionBtn">Скопировать ID</button>
+          <button class="btn btn-secondary" id="shareSessionBtn">Поделиться</button>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <h2>>A;54=85 A5AA88</h2>
+      <h2>Последние сессии</h2>
       <div class="sessions-list" id="sessionsList">
-        <p style="color: #6b7280; font-size: 14px;">03@C7:0 A5AA89...</p>
+        <p style="color: #6b7280; font-size: 14px;">Загрузка сессий...</p>
       </div>
     </div>
   </div>
