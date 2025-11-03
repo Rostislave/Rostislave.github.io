@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>0=5;L 2@0G0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background:#0b0c10;
+      color:#e8eef2;
+      margin:0;
+      padding:20px;
+      min-height:100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #1f2230;
+    }
+    .header h1 {
+      font-size: 24px;
+      margin: 0;
+      color: #e8eef2;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .user-email {
+      font-size: 14px;
+      color: #a9b1bd;
+    }
+    .logout-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #ff6b6b;
+      background: transparent;
+      color: #ff6b6b;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover {
+      background: #ff6b6b;
+      color: #fff;
+    }
+    .card {
+      background:#12131a;
+      border:1px solid #1f2230;
+      border-radius:12px;
+      padding:24px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-size:18px;
+      margin:0 0 20px;
+      color: #e8eef2;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display:block;
+      font-size:13px;
+      color:#a9b1bd;
+      margin-bottom:6px;
+      font-weight: 500;
+    }
+    input, textarea {
+      width: 100%;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid #2a2e42;
+      background:#0f1016;
+      color:#e8eef2;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .btn {
+      padding:12px 24px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background:#3456ff;
+      color:#fff;
+    }
+    .btn-primary:hover {
+      background:#2845dd;
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #3456ff;
+      color: #3456ff;
+      margin-left: 10px;
+    }
+    .btn-secondary:hover {
+      background: rgba(52, 86, 255, 0.1);
+    }
+    .session-id-display {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      background: #0f1016;
+      border: 1px solid #2a2e42;
+      border-radius: 8px;
+    }
+    .session-id-display.show {
+      display: block;
+    }
+    .session-id-display h3 {
+      font-size: 14px;
+      color: #a9b1bd;
+      margin: 0 0 10px;
+      font-weight: 500;
+    }
+    .session-id-value {
+      font-size: 20px;
+      color: #3456ff;
+      font-weight: 600;
+      font-family: 'Monaco', 'Courier New', monospace;
+      word-break: break-all;
+      margin-bottom: 12px;
+    }
+    .session-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .sessions-list {
+      margin-top: 20px;
+    }
+    .session-item {
+      background: #0f1016;
+      border: 1px solid #2a2e42;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .session-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .session-item-id {
+      font-size: 16px;
+      color: #3456ff;
+      font-weight: 600;
+      font-family: 'Monaco', 'Courier New', monospace;
+    }
+    .session-item-date {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .session-item-patient {
+      font-size: 14px;
+      color: #e8eef2;
+      margin-bottom: 4px;
+    }
+    .session-item-notes {
+      font-size: 13px;
+      color: #a9b1bd;
+      line-height: 1.5;
+    }
+    .success-msg {
+      color: #51cf66;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+    .success-msg.show {
+      display: block;
+    }
+    .error-msg {
+      color: #ff6b6b;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+    .error-msg.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>0=5;L 2@0G0</h1>
+      <div class="user-info">
+        <span class="user-email" id="userEmail">03@C7:0...</span>
+        <button class="logout-btn" id="logoutBtn">K9B8</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>!>740BL =>2CN A5AA8N</h2>
+      <form id="sessionForm">
+        <div class="form-group">
+          <label for="patientName"><O ?0F85=B0</label>
+          <input type="text" id="patientName" placeholder="20= 20=>2" required />
+        </div>
+        <div class="form-group">
+          <label for="sessionNotes">@8<5G0=8O : A5AA88 (>?F8>=0;L=>)</label>
+          <textarea id="sessionNotes" placeholder=">?>;=8B5;L=0O 8=D>@<0F8O > A5AA88..."></textarea>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-primary" id="createSessionBtn">!>740BL A5AA8N</button>
+          <button type="button" class="btn btn-secondary" id="resetFormBtn">G8AB8BL</button>
+        </div>
+        <div class="success-msg" id="successMsg">!5AA8O CA?5H=> A>740=0!</div>
+        <div class="error-msg" id="errorMsg">H81:0 ?@8 A>740=88 A5AA88</div>
+      </form>
+
+      <div class="session-id-display" id="sessionIdDisplay">
+        <h3>ID =>2>9 A5AA88:</h3>
+        <div class="session-id-value" id="sessionIdValue"></div>
+        <div class="session-actions">
+          <button class="btn btn-primary" id="copySessionBtn">!:>?8@>20BL ID</button>
+          <button class="btn btn-secondary" id="shareSessionBtn">>45;8BLAO</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>>A;54=85 A5AA88</h2>
+      <div class="sessions-list" id="sessionsList">
+        <p style="color: #6b7280; font-size: 14px;">03@C7:0 A5AA89...</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./scripts/doctor.js"></script>
+</body>
+</html>
