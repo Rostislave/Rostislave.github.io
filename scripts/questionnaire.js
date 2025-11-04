@@ -19,12 +19,14 @@ const prevBtn = $("prevBtn");
 
 // Глобальные переменные
 let questions = [];
-let displayableQuestions = []; // Вопросы без пропускаемых
-let currentQuestionIndex = 0;
+let currentQuestionIndex = 0; // Текущий индекс в массиве questions (с учетом пропусков)
 let answers = [];
 let patientData = null;
 let linkCode = null;
 let isTransitioning = false; // Флаг для предотвращения спама
+
+// Список номеров вопросов, которые нужно пропускать (не показывать пациенту)
+const SKIPPED_QUESTION_NUMBERS = [14, 33, 48, 63, 66, 69, 121, 123, 133, 151, 168, 182, 184, 197, 200, 205, 266, 275, 293, 334, 349, 350, 462, 464, 474, 542, 551];
 
 // Получаем данные из URL и localStorage
 const urlParams = new URLSearchParams(window.location.search);
@@ -146,13 +148,8 @@ async function loadQuestions(file) {
 
     questions = await response.json();
 
-    // Фильтруем вопросы - убираем те, что содержат "обвести кружочком" или "ответьте "не знаю""
-    displayableQuestions = questions.filter(q => {
-      const text = q.text.toLowerCase();
-      return !text.includes("обвести кружочком") && !text.includes("На этот вопрос ответьте");
-    });
-
-    console.log(`Загружено ${questions.length} вопросов, отображаемых: ${displayableQuestions.length}`);
+    console.log(`Загружено ${questions.length} вопросов`);
+    console.log(`Пропускаемых вопросов: ${SKIPPED_QUESTION_NUMBERS.length}`);
   } catch (err) {
     throw new Error("Ошибка загрузки вопросов: " + err.message);
   }
@@ -165,20 +162,52 @@ function loadAnswers() {
     answers = JSON.parse(storedAnswers);
   } else {
     // Инициализируем массив ответов для всех вопросов
-    // Для пропускаемых вопросов (с "обвести кружочком" или "ответьте не знаю") ставим 0
+    // Для пропускаемых вопросов ставим 0
     // Для отображаемых - null (пока не ответили)
-    answers = questions.map(q => {
-      const text = q.text.toLowerCase();
-      const isSkippable = text.includes("обвести кружочком") ||
-                          text.includes("ответьте \"не знаю\"") ||
-                          text.includes("ответьте \"не знаю\"") ||
-                          text.includes("На этот вопрос ответьте");
-      return {
-        number: q.number,
-        answer: isSkippable ? 0 : null
-      };
-    });
+    answers = questions.map(q => ({
+      number: q.number,
+      answer: SKIPPED_QUESTION_NUMBERS.includes(q.number) ? 0 : null
+    }));
   }
+}
+
+// Проверяем, нужно ли пропускать вопрос
+function shouldSkipQuestion(questionNumber) {
+  return SKIPPED_QUESTION_NUMBERS.includes(questionNumber);
+}
+
+// Находим следующий непропускаемый вопрос
+function getNextQuestionIndex(currentIndex) {
+  let nextIndex = currentIndex + 1;
+  while (nextIndex < questions.length && shouldSkipQuestion(questions[nextIndex].number)) {
+    nextIndex++;
+  }
+  return nextIndex < questions.length ? nextIndex : currentIndex;
+}
+
+// Находим предыдущий непропускаемый вопрос
+function getPrevQuestionIndex(currentIndex) {
+  let prevIndex = currentIndex - 1;
+  while (prevIndex >= 0 && shouldSkipQuestion(questions[prevIndex].number)) {
+    prevIndex--;
+  }
+  return prevIndex >= 0 ? prevIndex : currentIndex;
+}
+
+// Получаем общее количество отображаемых вопросов
+function getDisplayableQuestionsCount() {
+  return questions.length - SKIPPED_QUESTION_NUMBERS.length;
+}
+
+// Получаем текущую позицию в отображаемых вопросах
+function getCurrentDisplayPosition() {
+  let position = 0;
+  for (let i = 0; i < currentQuestionIndex; i++) {
+    if (!shouldSkipQuestion(questions[i].number)) {
+      position++;
+    }
+  }
+  return position + 1; // +1 потому что нумерация с 1
 }
 
 // Сохраняем ответы в localStorage
@@ -188,25 +217,41 @@ function saveAnswers() {
 
 // Инициализируем прогресс-бар
 function initProgressBar() {
-  const totalDisplayable = displayableQuestions.length;
+  const totalDisplayable = getDisplayableQuestionsCount();
   const dotsCount = Math.min(20, totalDisplayable); // Максимум 20 точек
   const questionsPerDot = Math.ceil(totalDisplayable / dotsCount);
 
   progressDots.innerHTML = "";
 
+  let displayableIndex = 0;
   for (let i = 0; i < dotsCount; i++) {
     const dot = document.createElement("div");
     dot.className = "progress-dot";
 
+    // Находим реальный индекс вопроса для этой точки
+    let realIndex = 0;
+    let count = 0;
+    for (let j = 0; j < questions.length; j++) {
+      if (!shouldSkipQuestion(questions[j].number)) {
+        if (count === i * questionsPerDot) {
+          realIndex = j;
+          break;
+        }
+        count++;
+      }
+    }
+
     const tooltip = document.createElement("div");
-    const questionIndex = i * questionsPerDot;
-    const questionNum = displayableQuestions[Math.min(questionIndex, totalDisplayable - 1)]?.number || i + 1;
+    const questionNum = questions[realIndex]?.number || i + 1;
     tooltip.className = "progress-dot-tooltip";
     tooltip.textContent = `Вопрос ${questionNum}`;
     dot.appendChild(tooltip);
 
     dot.addEventListener("click", () => {
-      goToQuestion(Math.min(questionIndex, totalDisplayable - 1));
+      if (!isTransitioning) {
+        isTransitioning = true;
+        showQuestion(realIndex);
+      }
     });
 
     progressDots.appendChild(dot);
@@ -217,11 +262,18 @@ function initProgressBar() {
 
 // Обновляем прогресс-бар
 function updateProgressBar() {
-  const totalDisplayable = displayableQuestions.length;
-  const answeredCount = displayableQuestions.filter(q => {
-    const answer = answers.find(a => a.number === q.number);
-    return answer && answer.answer !== null;
-  }).length;
+  const totalDisplayable = getDisplayableQuestionsCount();
+
+  // Считаем отвеченные непропускаемые вопросы
+  let answeredCount = 0;
+  for (let i = 0; i < questions.length; i++) {
+    if (!shouldSkipQuestion(questions[i].number)) {
+      const answer = answers.find(a => a.number === questions[i].number);
+      if (answer && answer.answer !== null) {
+        answeredCount++;
+      }
+    }
+  }
 
   // Обновляем линию прогресса
   const progress = (answeredCount / totalDisplayable) * 100;
@@ -233,13 +285,24 @@ function updateProgressBar() {
   const questionsPerDot = Math.ceil(totalDisplayable / dotsCount);
 
   dots.forEach((dot, i) => {
-    const questionIndex = i * questionsPerDot;
-    const question = displayableQuestions[Math.min(questionIndex, totalDisplayable - 1)];
+    // Находим реальный индекс вопроса для этой точки
+    let realIndex = 0;
+    let count = 0;
+    for (let j = 0; j < questions.length; j++) {
+      if (!shouldSkipQuestion(questions[j].number)) {
+        if (count === i * questionsPerDot) {
+          realIndex = j;
+          break;
+        }
+        count++;
+      }
+    }
 
+    const question = questions[realIndex];
     if (question) {
       const answer = answers.find(a => a.number === question.number);
       const isAnswered = answer && answer.answer !== null;
-      const isCurrent = questionIndex === currentQuestionIndex;
+      const isCurrent = realIndex === currentQuestionIndex;
 
       dot.classList.toggle("answered", isAnswered);
       dot.classList.toggle("current", isCurrent);
@@ -249,12 +312,30 @@ function updateProgressBar() {
 
 // Показываем вопрос
 function showQuestion(index) {
-  if (index < 0 || index >= displayableQuestions.length) {
+  if (index < 0 || index >= questions.length) {
+    return;
+  }
+
+  // Пропускаем вопросы из списка
+  if (shouldSkipQuestion(questions[index].number)) {
+    // Если это движение вперед, ищем следующий
+    if (index > currentQuestionIndex) {
+      const nextIndex = getNextQuestionIndex(index);
+      if (nextIndex !== index) {
+        showQuestion(nextIndex);
+      }
+    } else {
+      // Если назад, ищем предыдущий
+      const prevIndex = getPrevQuestionIndex(index);
+      if (prevIndex !== index) {
+        showQuestion(prevIndex);
+      }
+    }
     return;
   }
 
   currentQuestionIndex = index;
-  const question = displayableQuestions[index];
+  const question = questions[index];
 
   // Добавляем класс fade-out
   questionText.classList.add("fade-out");
@@ -263,7 +344,9 @@ function showQuestion(index) {
 
   setTimeout(() => {
     // Обновляем содержимое
-    questionNumber.textContent = `Вопрос ${question.number} из ${questions.length}`;
+    const displayPosition = getCurrentDisplayPosition();
+    const totalDisplayable = getDisplayableQuestionsCount();
+    questionNumber.textContent = `Вопрос ${question.number} (${displayPosition} из ${totalDisplayable})`;
     questionText.textContent = question.text;
 
     // Убираем класс fade-out
@@ -306,7 +389,7 @@ document.querySelectorAll(".answer-btn").forEach(btn => {
     isTransitioning = true;
 
     const answerValue = parseInt(btn.dataset.answer);
-    const question = displayableQuestions[currentQuestionIndex];
+    const question = questions[currentQuestionIndex];
 
     // Сохраняем ответ
     const answerIndex = answers.findIndex(a => a.number === question.number);
@@ -326,8 +409,10 @@ document.querySelectorAll(".answer-btn").forEach(btn => {
     // Обновляем состояние кнопок навигации
     updateNavigationButtons();
 
-    // Если это последний вопрос - показываем модальное окно
-    if (currentQuestionIndex === displayableQuestions.length - 1) {
+    // Проверяем, это ли последний отображаемый вопрос
+    const nextIndex = getNextQuestionIndex(currentQuestionIndex);
+    if (nextIndex === currentQuestionIndex) {
+      // Это был последний вопрос
       setTimeout(() => {
         finishModal.classList.add("show");
         isTransitioning = false;
@@ -335,7 +420,7 @@ document.querySelectorAll(".answer-btn").forEach(btn => {
     } else {
       // Автоматически переходим к следующему вопросу
       setTimeout(() => {
-        showQuestion(currentQuestionIndex + 1);
+        showQuestion(nextIndex);
       }, 400);
     }
   });
@@ -343,33 +428,44 @@ document.querySelectorAll(".answer-btn").forEach(btn => {
 
 // Переход к вопросу
 function goToQuestion(index) {
-  showQuestion(index);
+  if (!isTransitioning) {
+    isTransitioning = true;
+    showQuestion(index);
+  }
 }
 
 // Обновляем состояние кнопок навигации
 function updateNavigationButtons() {
-  // Кнопка "Назад" недоступна на первом вопросе
-  prevBtn.disabled = currentQuestionIndex === 0;
+  // Кнопка "Назад" недоступна, если нет предыдущего непропускаемого вопроса
+  const prevIndex = getPrevQuestionIndex(currentQuestionIndex);
+  prevBtn.disabled = prevIndex === currentQuestionIndex;
 }
 
 // Обработчик кнопки "Назад"
 prevBtn.addEventListener("click", () => {
-  if (currentQuestionIndex > 0 && !isTransitioning) {
+  if (!isTransitioning) {
     isTransitioning = true;
-    showQuestion(currentQuestionIndex - 1);
+    const prevIndex = getPrevQuestionIndex(currentQuestionIndex);
+    if (prevIndex !== currentQuestionIndex) {
+      showQuestion(prevIndex);
+    } else {
+      isTransitioning = false;
+    }
   }
 });
 
 // Проверяем, все ли вопросы отвечены
 function checkIfAllAnswered() {
-  const allAnswered = displayableQuestions.every(q => {
-    const answer = answers.find(a => a.number === q.number);
-    return answer && answer.answer !== null;
-  });
-
-  if (allAnswered) {
-    finishModal.classList.add("show");
+  // Проверяем все непропускаемые вопросы
+  for (let i = 0; i < questions.length; i++) {
+    if (!shouldSkipQuestion(questions[i].number)) {
+      const answer = answers.find(a => a.number === questions[i].number);
+      if (!answer || answer.answer === null) {
+        return false;
+      }
+    }
   }
+  return true;
 }
 
 // Обработчики для финального окна
