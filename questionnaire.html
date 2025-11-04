@@ -178,6 +178,36 @@
       color: white;
     }
 
+    /* Кнопки навигации */
+    .navigation-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    .nav-btn {
+      flex: 1;
+      padding: 12px 20px;
+      border: 2px solid #667eea;
+      background: white;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #667eea;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: #667eea;
+      color: white;
+    }
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      border-color: #ccc;
+      color: #ccc;
+    }
+
     /* Финальное окно */
     .finish-modal {
       position: fixed;
@@ -292,6 +322,12 @@
           <button class="answer-btn true" data-answer="1">Верно</button>
           <button class="answer-btn false" data-answer="-1">Неверно</button>
           <button class="answer-btn unknown" data-answer="0">Не знаю</button>
+        </div>
+
+        <!-- Кнопки навигации -->
+        <div class="navigation-buttons">
+          <button class="nav-btn" id="prevBtn">← Назад</button>
+          <button class="nav-btn" id="nextBtn">Далее →</button>
         </div>
       </div>
     </div>
