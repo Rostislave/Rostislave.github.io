@@ -149,7 +149,7 @@ async function loadQuestions(file) {
     // Фильтруем вопросы - убираем те, что содержат "обвести кружочком" или "ответьте "не знаю""
     displayableQuestions = questions.filter(q => {
       const text = q.text.toLowerCase();
-      return !text.includes("обвести кружочком") && !text.includes("ответьте \"не знаю\"") && !text.includes("ответьте "не знаю"");
+      return !text.includes("обвести кружочком") && !text.includes("ответьте \"не знаю\"") && !text.includes("На этот вопрос ответьте");
     });
 
     console.log(`Загружено ${questions.length} вопросов, отображаемых: ${displayableQuestions.length}`);
