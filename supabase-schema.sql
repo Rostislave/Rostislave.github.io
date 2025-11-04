@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS public.sessions (
   answers_json JSONB,
   status TEXT NOT NULL DEFAULT 'pending',
   gender TEXT,
+  age INT2,
+  patient_info text,
   doctor_id UUID,
   doctor_email TEXT,
   notes TEXT,
