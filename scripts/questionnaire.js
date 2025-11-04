@@ -16,7 +16,6 @@ const progressFill = $("progressFill");
 const progressDots = $("progressDots");
 const finishModal = $("finishModal");
 const prevBtn = $("prevBtn");
-const nextBtn = $("nextBtn");
 
 // Глобальные переменные
 let questions = [];
@@ -25,6 +24,7 @@ let currentQuestionIndex = 0;
 let answers = [];
 let patientData = null;
 let linkCode = null;
+let isTransitioning = false; // Флаг для предотвращения спама
 
 // Получаем данные из URL и localStorage
 const urlParams = new URLSearchParams(window.location.search);
@@ -40,6 +40,9 @@ if (!linkCode) {
 // Инициализация
 async function init() {
   try {
+    // Очищаем старые данные из localStorage для других сессий
+    cleanOldLocalStorage();
+
     // Загружаем данные пациента из localStorage
     const storedData = localStorage.getItem("patientData");
     if (!storedData) {
@@ -80,6 +83,48 @@ async function init() {
   }
 }
 
+// Очищаем старые данные из localStorage
+function cleanOldLocalStorage() {
+  const keysToRemove = [];
+
+  // Проходим по всем ключам в localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+
+    // Ищем ключи, связанные с опросником
+    if (key && key.startsWith("questionnaireAnswers_")) {
+      // Если ключ не для текущей сессии - помечаем на удаление
+      if (key !== "questionnaireAnswers_" + linkCode) {
+        keysToRemove.push(key);
+      }
+    }
+
+    // Также очищаем старые данные пациента, если они есть
+    if (key === "patientData") {
+      const storedData = localStorage.getItem(key);
+      if (storedData) {
+        try {
+          const data = JSON.parse(storedData);
+          // Если это данные другой сессии - удаляем
+          if (data.linkCode && data.linkCode !== linkCode) {
+            keysToRemove.push(key);
+          }
+        } catch (e) {
+          // Если не удалось распарсить - удаляем
+          keysToRemove.push(key);
+        }
+      }
+    }
+  }
+
+  // Удаляем помеченные ключи
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+
+  if (keysToRemove.length > 0) {
+    console.log(`Очищено ${keysToRemove.length} старых записей из localStorage`);
+  }
+}
+
 // Определяем файл с вопросами
 function getQuestionFile(gender, age) {
   const isSmall = age >= 13 && age <= 15;
@@ -101,9 +146,10 @@ async function loadQuestions(file) {
 
     questions = await response.json();
 
-    // Фильтруем вопросы - убираем те, что содержат "обвести кружочком"
+    // Фильтруем вопросы - убираем те, что содержат "обвести кружочком" или "ответьте "не знаю""
     displayableQuestions = questions.filter(q => {
-      return !q.text.toLowerCase().includes("обвести кружочком");
+      const text = q.text.toLowerCase();
+      return !text.includes("обвести кружочком") && !text.includes("ответьте \"не знаю\"") && !text.includes("ответьте "не знаю"");
     });
 
     console.log(`Загружено ${questions.length} вопросов, отображаемых: ${displayableQuestions.length}`);
@@ -119,10 +165,13 @@ function loadAnswers() {
     answers = JSON.parse(storedAnswers);
   } else {
     // Инициализируем массив ответов для всех вопросов
-    // Для пропускаемых вопросов (с "обвести кружочком") ставим 0
+    // Для пропускаемых вопросов (с "обвести кружочком" или "ответьте не знаю") ставим 0
     // Для отображаемых - null (пока не ответили)
     answers = questions.map(q => {
-      const isSkippable = q.text.toLowerCase().includes("обвести кружочком");
+      const text = q.text.toLowerCase();
+      const isSkippable = text.includes("обвести кружочком") ||
+                          text.includes("ответьте \"не знаю\"") ||
+                          text.includes("ответьте "не знаю"");
       return {
         number: q.number,
         answer: isSkippable ? 0 : null
@@ -228,7 +277,10 @@ function showQuestion(index) {
 
     // Обновляем состояние кнопок навигации
     updateNavigationButtons();
-  }, 200);
+
+    // Сбрасываем флаг переходов
+    isTransitioning = false;
+  }, 250);
 }
 
 // Обновляем состояние кнопок ответов
@@ -245,6 +297,13 @@ function updateAnswerButtons(questionNumber) {
 // Обработчик клика на кнопку ответа
 document.querySelectorAll(".answer-btn").forEach(btn => {
   btn.addEventListener("click", () => {
+    // Предотвращаем спам кликов
+    if (isTransitioning) {
+      return;
+    }
+
+    isTransitioning = true;
+
     const answerValue = parseInt(btn.dataset.answer);
     const question = displayableQuestions[currentQuestionIndex];
 
@@ -270,7 +329,13 @@ document.querySelectorAll(".answer-btn").forEach(btn => {
     if (currentQuestionIndex === displayableQuestions.length - 1) {
       setTimeout(() => {
         finishModal.classList.add("show");
-      }, 300);
+        isTransitioning = false;
+      }, 400);
+    } else {
+      // Автоматически переходим к следующему вопросу
+      setTimeout(() => {
+        showQuestion(currentQuestionIndex + 1);
+      }, 400);
     }
   });
 });
@@ -284,32 +349,13 @@ function goToQuestion(index) {
 function updateNavigationButtons() {
   // Кнопка "Назад" недоступна на первом вопросе
   prevBtn.disabled = currentQuestionIndex === 0;
-
-  // Кнопка "Далее" недоступна на последнем вопросе или если не ответили на текущий
-  const currentQuestion = displayableQuestions[currentQuestionIndex];
-  const currentAnswer = answers.find(a => a.number === currentQuestion.number);
-  const isAnswered = currentAnswer && currentAnswer.answer !== null;
-
-  nextBtn.disabled = currentQuestionIndex === displayableQuestions.length - 1 || !isAnswered;
 }
 
 // Обработчик кнопки "Назад"
 prevBtn.addEventListener("click", () => {
-  if (currentQuestionIndex > 0) {
+  if (currentQuestionIndex > 0 && !isTransitioning) {
+    isTransitioning = true;
     showQuestion(currentQuestionIndex - 1);
-  }
-});
-
-// Обработчик кнопки "Далее"
-nextBtn.addEventListener("click", () => {
-  if (currentQuestionIndex < displayableQuestions.length - 1) {
-    const currentQuestion = displayableQuestions[currentQuestionIndex];
-    const currentAnswer = answers.find(a => a.number === currentQuestion.number);
-    const isAnswered = currentAnswer && currentAnswer.answer !== null;
-
-    if (isAnswered) {
-      showQuestion(currentQuestionIndex + 1);
-    }
   }
 });
 
@@ -335,8 +381,8 @@ $("finishTest").addEventListener("click", async () => {
     $("finishTest").disabled = true;
     $("finishTest").textContent = "Отправка...";
 
-    // Подготавливаем ответы для отправки (только с ответами)
-    const answersToSend = answers.filter(a => a.answer !== null);
+    // Подготавливаем ответы для отправки (все ответы, включая пропускаемые с 0)
+    const answersToSend = answers;
 
     // Отправляем в Supabase
     const { data, error } = await supabase
@@ -356,7 +402,7 @@ $("finishTest").addEventListener("click", async () => {
       return;
     }
 
-    // Очищаем localStorage
+    // Очищаем localStorage ТОЛЬКО после успешного сохранения
     localStorage.removeItem("questionnaireAnswers_" + linkCode);
     localStorage.removeItem("patientData");
 
