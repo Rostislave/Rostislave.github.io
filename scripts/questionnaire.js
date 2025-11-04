@@ -171,7 +171,8 @@ function loadAnswers() {
       const text = q.text.toLowerCase();
       const isSkippable = text.includes("обвести кружочком") ||
                           text.includes("ответьте \"не знаю\"") ||
-                          text.includes("ответьте "не знаю"");
+                          text.includes("ответьте \"не знаю\"") ||
+                          text.includes("На этот вопрос ответьте");
       return {
         number: q.number,
         answer: isSkippable ? 0 : null
