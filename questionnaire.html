@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Опросник MMPI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 30px;
+    }
+
+    /* Прогресс бар */
+    .progress-container {
+      margin-bottom: 30px;
+      position: relative;
+    }
+    .progress-line {
+      position: relative;
+      height: 4px;
+      background: #e0e0e0;
+      border-radius: 2px;
+      margin: 20px 0;
+    }
+    .progress-fill {
+      position: absolute;
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    .progress-dots {
+      position: absolute;
+      top: -6px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .progress-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid #e0e0e0;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .progress-dot.answered {
+      border-color: #667eea;
+      background: #667eea;
+    }
+    .progress-dot.current {
+      border-color: #764ba2;
+      background: #764ba2;
+      transform: scale(1.3);
+    }
+    .progress-dot:hover {
+      transform: scale(1.4);
+    }
+    .progress-dot-tooltip {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .progress-dot:hover .progress-dot-tooltip {
+      opacity: 1;
+    }
+
+    /* Вопрос */
+    .question-container {
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .question-text {
+      font-size: 20px;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 40px;
+      line-height: 1.6;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+    .question-text.fade-out {
+      opacity: 0;
+    }
+    .question-number {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    /* Кнопки ответов */
+    .answer-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+    .answer-buttons.fade-out {
+      opacity: 0;
+    }
+    .answer-btn {
+      flex: 1;
+      min-width: 150px;
+      padding: 16px 24px;
+      border: 2px solid #e0e0e0;
+      background: white;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #333;
+    }
+    .answer-btn:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    .answer-btn.selected {
+      border-color: #667eea;
+      background: #667eea;
+      color: white;
+    }
+    .answer-btn.true {
+      border-color: #10b981;
+    }
+    .answer-btn.true:hover,
+    .answer-btn.true.selected {
+      background: #10b981;
+      color: white;
+    }
+    .answer-btn.false {
+      border-color: #ef4444;
+    }
+    .answer-btn.false:hover,
+    .answer-btn.false.selected {
+      background: #ef4444;
+      color: white;
+    }
+    .answer-btn.unknown {
+      border-color: #f59e0b;
+    }
+    .answer-btn.unknown:hover,
+    .answer-btn.unknown.selected {
+      background: #f59e0b;
+      color: white;
+    }
+
+    /* Финальное окно */
+    .finish-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .finish-modal.show {
+      display: flex;
+    }
+    .finish-content {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      max-width: 500px;
+      text-align: center;
+    }
+    .finish-content h2 {
+      margin: 0 0 20px;
+      color: #667eea;
+    }
+    .finish-content p {
+      margin-bottom: 30px;
+      color: #666;
+    }
+    .finish-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .finish-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .finish-btn.primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .finish-btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    .finish-btn.secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+    .finish-btn.secondary:hover {
+      background: #d0d0d0;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      background: #fee;
+      color: #c33;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Загрузка опросника...</p>
+    </div>
+
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div id="questionnaireContainer" style="display: none;">
+      <!-- Прогресс бар -->
+      <div class="progress-container">
+        <div class="progress-line">
+          <div class="progress-fill" id="progressFill"></div>
+          <div class="progress-dots" id="progressDots"></div>
+        </div>
+      </div>
+
+      <!-- Вопрос -->
+      <div class="question-container">
+        <div class="question-number" id="questionNumber"></div>
+        <div class="question-text" id="questionText"></div>
+        <div class="answer-buttons">
+          <button class="answer-btn true" data-answer="1">Верно</button>
+          <button class="answer-btn false" data-answer="-1">Неверно</button>
+          <button class="answer-btn unknown" data-answer="0">Не знаю</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Финальное окно -->
+  <div class="finish-modal" id="finishModal">
+    <div class="finish-content">
+      <h2>Завершить тестирование?</h2>
+      <p>Вы ответили на все вопросы. Вы можете вернуться и изменить ответы или завершить тестирование.</p>
+      <div class="finish-buttons">
+        <button class="finish-btn secondary" id="backToQuestions">Вернуться к вопросам</button>
+        <button class="finish-btn primary" id="finishTest">Завершить тестирование</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./scripts/questionnaire.js"></script>
+</body>
+</html>
