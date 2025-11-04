@@ -95,32 +95,48 @@ patientForm.addEventListener("submit", async (e) => {
 
   try {
     // Собираем данные формы
-    const formData = {
-      patient_name: $("patientName").value.trim(),
-      gender: document.querySelector('input[name="gender"]:checked')?.value,
-      age: parseInt($("age").value),
-      birth_date: $("birthDate").value || null,
-      main_complaint: $("mainComplaint").value.trim(),
-      chronic_diseases: $("chronicDiseases").value.trim() || null,
-      medications: $("medications").value.trim() || null,
-      allergies: $("allergies").value.trim() || null,
-      additional_info: $("additionalInfo").value.trim() || null
-    };
+    const patientName = $("patientName").value.trim();
+    const gender = document.querySelector('input[name="gender"]:checked')?.value;
+    const age = parseInt($("age").value);
+    const chronicDiseases = $("chronicDiseases").value.trim();
+    const medications = $("medications").value.trim();
+    const allergies = $("allergies").value.trim();
 
     // Валидация обязательных полей
-    if (!formData.patient_name || !formData.gender || !formData.age || !formData.main_complaint) {
+    if (!patientName || !gender || !age) {
       throw new Error("Пожалуйста, заполните все обязательные поля.");
     }
+
+    // Формируем patient_info
+    const patientInfoParts = [];
+    if (chronicDiseases) {
+      patientInfoParts.push("Хронические заболевания:\n" + chronicDiseases);
+    }
+    if (medications) {
+      patientInfoParts.push("Принимаемые лекарства:\n" + medications);
+    }
+    if (allergies) {
+      patientInfoParts.push("Аллергии:\n" + allergies);
+    }
+    const patientInfo = patientInfoParts.join("\n\n") || null;
+
+    // Сохраняем данные в localStorage для следующей страницы
+    localStorage.setItem("patientData", JSON.stringify({
+      linkCode,
+      patientName,
+      gender,
+      age
+    }));
 
     // Отправляем данные в Supabase
     // RLS политика allow_update_by_link_code_param позволит обновить запись
     const { data, error } = await supabase
       .from("sessions")
       .update({
-        patient_name: formData.patient_name,
-        gender: formData.gender,
-        answers_json: formData,
-        status: "completed"
+        patient_name: patientName,
+        gender: gender,
+        age: age,
+        patient_info: patientInfo
       })
       .eq("link_code", linkCode)
       .select();
@@ -130,14 +146,8 @@ patientForm.addEventListener("submit", async (e) => {
       throw new Error("Ошибка при сохранении данных. Пожалуйста, попробуйте снова.");
     }
 
-    // Успех!
-    successMsg.classList.add("show");
-    patientForm.style.display = "none";
-
-    // Можно перенаправить или показать сообщение
-    setTimeout(() => {
-      // window.location.href = "./thank-you.html";
-    }, 2000);
+    // Успех! Переход на страницу с вопросами
+    window.location.href = "./questionnaire.html?code=" + linkCode;
 
   } catch (error) {
     errorMsg.textContent = error.message || "Произошла ошибка при отправке формы.";
