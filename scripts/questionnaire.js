@@ -15,6 +15,8 @@ const questionText = $("questionText");
 const progressFill = $("progressFill");
 const progressDots = $("progressDots");
 const finishModal = $("finishModal");
+const prevBtn = $("prevBtn");
+const nextBtn = $("nextBtn");
 
 // Глобальные переменные
 let questions = [];
@@ -116,11 +118,16 @@ function loadAnswers() {
   if (storedAnswers) {
     answers = JSON.parse(storedAnswers);
   } else {
-    // Инициализируем пустой массив ответов для всех вопросов (включая пропускаемые)
-    answers = questions.map(q => ({
-      number: q.number,
-      answer: null
-    }));
+    // Инициализируем массив ответов для всех вопросов
+    // Для пропускаемых вопросов (с "обвести кружочком") ставим 0
+    // Для отображаемых - null (пока не ответили)
+    answers = questions.map(q => {
+      const isSkippable = q.text.toLowerCase().includes("обвести кружочком");
+      return {
+        number: q.number,
+        answer: isSkippable ? 0 : null
+      };
+    });
   }
 }
 
@@ -219,10 +226,8 @@ function showQuestion(index) {
     // Обновляем прогресс-бар
     updateProgressBar();
 
-    // Проверяем, это последний вопрос
-    if (index === displayableQuestions.length - 1) {
-      checkIfAllAnswered();
-    }
+    // Обновляем состояние кнопок навигации
+    updateNavigationButtons();
   }, 200);
 }
 
@@ -258,14 +263,15 @@ document.querySelectorAll(".answer-btn").forEach(btn => {
     // Обновляем прогресс-бар
     updateProgressBar();
 
-    // Переходим к следующему вопросу
-    setTimeout(() => {
-      if (currentQuestionIndex < displayableQuestions.length - 1) {
-        showQuestion(currentQuestionIndex + 1);
-      } else {
-        checkIfAllAnswered();
-      }
-    }, 300);
+    // Обновляем состояние кнопок навигации
+    updateNavigationButtons();
+
+    // Если это последний вопрос - показываем модальное окно
+    if (currentQuestionIndex === displayableQuestions.length - 1) {
+      setTimeout(() => {
+        finishModal.classList.add("show");
+      }, 300);
+    }
   });
 });
 
@@ -273,6 +279,39 @@ document.querySelectorAll(".answer-btn").forEach(btn => {
 function goToQuestion(index) {
   showQuestion(index);
 }
+
+// Обновляем состояние кнопок навигации
+function updateNavigationButtons() {
+  // Кнопка "Назад" недоступна на первом вопросе
+  prevBtn.disabled = currentQuestionIndex === 0;
+
+  // Кнопка "Далее" недоступна на последнем вопросе или если не ответили на текущий
+  const currentQuestion = displayableQuestions[currentQuestionIndex];
+  const currentAnswer = answers.find(a => a.number === currentQuestion.number);
+  const isAnswered = currentAnswer && currentAnswer.answer !== null;
+
+  nextBtn.disabled = currentQuestionIndex === displayableQuestions.length - 1 || !isAnswered;
+}
+
+// Обработчик кнопки "Назад"
+prevBtn.addEventListener("click", () => {
+  if (currentQuestionIndex > 0) {
+    showQuestion(currentQuestionIndex - 1);
+  }
+});
+
+// Обработчик кнопки "Далее"
+nextBtn.addEventListener("click", () => {
+  if (currentQuestionIndex < displayableQuestions.length - 1) {
+    const currentQuestion = displayableQuestions[currentQuestionIndex];
+    const currentAnswer = answers.find(a => a.number === currentQuestion.number);
+    const isAnswered = currentAnswer && currentAnswer.answer !== null;
+
+    if (isAnswered) {
+      showQuestion(currentQuestionIndex + 1);
+    }
+  }
+});
 
 // Проверяем, все ли вопросы отвечены
 function checkIfAllAnswered() {
