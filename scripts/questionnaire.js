@@ -146,11 +146,29 @@ async function loadQuestions(file) {
 
     questions = await response.json();
 
-    // Фильтруем вопросы - убираем те, что содержат "обвести кружочком" или "ответьте "не знаю""
-    displayableQuestions = questions.filter(q => {
-      const text = q.text.toLowerCase();
-      return !text.includes("обвести кружочком") && !text.includes("ответьте \"не знаю\"") && !text.includes("ответьте "не знаю"");
-    });
+    // Функция для проверки, является ли вопрос пропускаемым
+    function isSkippableQuestion(text) {
+      const lowerText = text.toLowerCase();
+
+      // Проверяем на "обвести кружочком"
+      if (lowerText.includes("обвести кружочком")) {
+        return true;
+      }
+
+      // Проверяем на "ответьте не знаю" (без учета кавычек)
+      // Убираем все кавычки и проверяем паттерн
+      const textWithoutQuotes = lowerText.replace(/["'«»]/g, '');
+      if (textWithoutQuotes.includes("ответьте не знаю") ||
+          textWithoutQuotes.includes("на этот вопрос ответьте не знаю") ||
+          textWithoutQuotes.includes("на этот пункт ответьте не знаю")) {
+        return true;
+      }
+
+      return false;
+    }
+
+    // Фильтруем вопросы - убираем пропускаемые
+    displayableQuestions = questions.filter(q => !isSkippableQuestion(q.text));
 
     console.log(`Загружено ${questions.length} вопросов, отображаемых: ${displayableQuestions.length}`);
   } catch (err) {
@@ -165,13 +183,27 @@ function loadAnswers() {
     answers = JSON.parse(storedAnswers);
   } else {
     // Инициализируем массив ответов для всех вопросов
-    // Для пропускаемых вопросов (с "обвести кружочком" или "ответьте не знаю") ставим 0
+    // Для пропускаемых вопросов ставим 0
     // Для отображаемых - null (пока не ответили)
     answers = questions.map(q => {
-      const text = q.text.toLowerCase();
-      const isSkippable = text.includes("обвести кружочком") ||
-                          text.includes("ответьте \"не знаю\"") ||
-                          text.includes("ответьте "не знаю"");
+      const lowerText = q.text.toLowerCase();
+
+      // Проверяем, является ли вопрос пропускаемым
+      let isSkippable = false;
+
+      // Проверка на "обвести кружочком"
+      if (lowerText.includes("обвести кружочком")) {
+        isSkippable = true;
+      }
+
+      // Проверка на "ответьте не знаю"
+      const textWithoutQuotes = lowerText.replace(/["'«»]/g, '');
+      if (textWithoutQuotes.includes("ответьте не знаю") ||
+          textWithoutQuotes.includes("на этот вопрос ответьте не знаю") ||
+          textWithoutQuotes.includes("на этот пункт ответьте не знаю")) {
+        isSkippable = true;
+      }
+
       return {
         number: q.number,
         answer: isSkippable ? 0 : null
